@@ -8,6 +8,7 @@ const baseSpec = {
 };
 
 const MAX_CATEGORY = 10;
+const MAX_AXIS_LABEL = 20;
 
 export const getVLSpec = (node: Node): VisualizationSpec[] => {
   const specs: VisualizationSpec[] = [];
@@ -67,8 +68,8 @@ export const getVLSpec = (node: Node): VisualizationSpec[] => {
   }
   // Heatmap
   if (
-    ((["ordinal", "nominal"].includes(node.primary.type) && node.df.shape[0] < MAX_CATEGORY) || node.isPrimaryBinned()) &&
-    ((["ordinal", "nominal"].includes(node.secondary.type) && node.df.shape[0] < MAX_CATEGORY) || node.isSecondaryBinned())
+    ((["ordinal", "nominal"].includes(node.primary.type) && node.df[node.primary.name].nUnique() < MAX_AXIS_LABEL) || node.isPrimaryBinned()) &&
+    ((["ordinal", "nominal"].includes(node.secondary.type) && node.df[node.secondary.name].nUnique() < MAX_AXIS_LABEL) || node.isSecondaryBinned())
   )
     specs.push({
       ...baseSpec,

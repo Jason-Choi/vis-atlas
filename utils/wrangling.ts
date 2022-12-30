@@ -1,6 +1,7 @@
 import { BinningFunction, FilterFunction, GroupByFunction, Node } from "../types";
 
 export const binning: BinningFunction = (node, target) => {
+  if (node.df.shape[0] < 100) return undefined
   if (node[target].type !== "quantitative") return undefined
   if (target === "primary" && node.isPrimaryBinned()) return undefined
   if (target === "secondary" && node.isSecondaryBinned()) return undefined
@@ -8,7 +9,6 @@ export const binning: BinningFunction = (node, target) => {
   const newNode = node.getChild()
   newNode.provenance.push(`binning-${target}`)
   
-
   return newNode
 }
 
@@ -17,16 +17,19 @@ export const groupby: GroupByFunction = (state, agg) => {
   if (!(
     ["nominal", "ordinal", "temporal"].includes(state.primary.type) &&
     !state.isPrimaryBinned() &&
+    !state.isSecondaryBinned() &&
     !state.provenance.some((p) => p.startsWith("groupby")) &&
     (agg === "count" ||
     (["mean", "sum"].includes(agg) && ["quantitative"].includes(state.secondary.type)) ||
     (["max", "min"].includes(agg) && ["quantitative"].includes(state.secondary.type)) )
   )) return undefined
+  
 
   const newNode = state.getChild()
   newNode.provenance.push(`groupby-${agg}`)
   newNode.df = newNode.df.groupby([newNode.primary.name]).col([newNode.secondary.name])[agg]()
   newNode.secondary.name = `${newNode.secondary.name}_${agg}`
+  newNode.secondary.type = "quantitative"
 
   return newNode
 }

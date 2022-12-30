@@ -28,7 +28,11 @@ export default function Home() {
         // initialization
 
         for (const pair of pairs) {
-            const node = new Node({ name: pair[0], type: MoviesAttributeTypes[pair[0]] }, { name: pair[1], type: MoviesAttributeTypes[pair[1]] }, df.loc({ columns: pair }))
+            const node = new Node(
+                { name: pair[0], type: MoviesAttributeTypes[pair[0]] },
+                { name: pair[1], type: MoviesAttributeTypes[pair[1]] },
+                df.loc({ columns: pair }).dropNa({ axis: 1, inplace: false })
+            )
             queue.push(node)
         }
 
@@ -54,13 +58,18 @@ export default function Home() {
     return (
         <Container maxW={"container-xl"}>
             <SimpleGrid minChildWidth={300} spacing={4}>
-                {visualizationNodes.map(node => node.vlSpecs.map((spec, i) => (
-                    <VStack key={i}>
-                        <Text fontSize="x-small">{spec["mark"]}</Text>
-                        <Text fontSize="x-small">{node.provenance.join(" -> ")}</Text>
-                        <VegaLite spec={spec} data={{ data: dfd.toJSON(node.df, { format: "column" }) }} />
-                    </VStack>
-                )))}
+                {visualizationNodes.map((node) =>
+                    node.vlSpecs.map((spec, i) => (
+                        <VStack key={i}>
+                            <Text fontSize="x-small">{node.provenance.join(" -> ")}</Text>
+                            <VegaLite
+                                spec={spec}
+                                data={{ data: dfd.toJSON(node.df, { format: "column" }) }}
+                                actions={false}
+                            />
+                        </VStack>
+                    ))
+                )}
             </SimpleGrid>
         </Container>
     )
